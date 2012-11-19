@@ -1,7 +1,7 @@
 ﻿(function ($) {
     /*  
     *   jQuery formCache plugin
-    *   Original author: @pmontoya
+    *   Original author: @pedromontoya
     *   Description:
     *   This plugin is to cache form values on the client browser using the 
     *   window.localStorage object. It also offers optional notification support to inform the user
@@ -17,12 +17,12 @@
     *        3) Initialize form caching with jQuery selector $('some-form-selection').formCache()
     *
     *    Using the Notification Section(optional):
-    *       1) Add CSS class for the notification section:
+    *       1) Add CSS class for the notification section(optional):
     *            .formcache-notification{
-    *               display: none;
+    *               //Style notification section
     *            }
     *       2) Add notification div within the form being cached:
-    *            <div class="formcache-notification" data-formcache-notify="true">
+    *            <div class="formcache-notification" data-formcache-notify="true" style="display: none;">
     *                <p>Your form data has been successfully restored.
     *                   <a href="#" data-formcache-clear="true">Reset form</a>
     *                </p>
@@ -73,7 +73,7 @@
             //Iterate over each object in the form value array
             $.each(formValueArray, function () {
                 //Only process objects with a value
-                if (this.value && this.value !== "") {
+                if (this.value) {
                     //Only add value/property to JSON object if it has not already been added.
                     if (jsonResultObject[this.name] === undefined) {
                         jsonResultObject[this.name] = this.value;
@@ -104,11 +104,12 @@
         //Iterate over each form in the selected element collection.
         return this.each(function () {
             var $formElement = $(this),                         //Wrap form element with jQuery Object.
+                isSubmitting = false;                           //Used by unload event to determine if form should be cached.
                 cacheKey = $formElement.data("formcache-key"),  //Grab cache key from form data- attribute.
                 $notificationSection = $formElement.find("[data-formcache-notify]"); //Grab notification section, if defined.
 
             //Do not proceed if a formcache-key data attribute was not specified.
-            if (cacheKey && cacheKey !== "") {
+            if (cacheKey) {
                 //Register event handler to restore cached form values.
                 $(document).ready(function () {
                     var showSuccessNotification = false;
@@ -124,7 +125,7 @@
                                 //Check that the property belong to the Object, not to its Prototype.
                                 if (jsonDataObject.hasOwnProperty(property)) {
                                     //Check if the Object property has a value.
-                                    if (jsonDataObject[property] && jsonDataObject[property] !== "") {
+                                    if (jsonDataObject[property]) {
                                         //Get handle on element with name matching the Object property.
                                         var $element = $("[name='" + property + "']").first();
 
@@ -142,7 +143,7 @@
                                                     $element.change();
                                                 }
                                             } else if ($element[0].type.toUpperCase() == "RADIO") {
-                                                if (jsonDataObject[property] && jsonDataObject[property] !== "") {
+                                                if (jsonDataObject[property]) {
                                                     //Get the radio elements with the stored value.
                                                     var $radioElement = $("[name='" + property + "']").filter(function () {
                                                         return $(this).val() === jsonDataObject[property];
@@ -188,14 +189,27 @@
                 //Register event handler to cache form values.
                 $(window).unload(function () {
                     try {
-                        //Get form data
-                        var jsonDataString = $.formCache.FormToJsonString($formElement);
+                        if (!isSubmitting) {
+                            //Get form data
+                            var jsonDataString = $.formCache.FormToJsonString($formElement);
 
-                        //Store form data in browsers local storage
-                        $.formCache.AddItem(cacheKey, jsonDataString);
+                            //Store form data in browsers local storage
+                            $.formCache.AddItem(cacheKey, jsonDataString);
+                        }
                     } catch (exception) {
                         //Eat exception, yum.
                     }
+                });
+
+                //Register submit handler on form, clearing cached values on submit
+                $formElement.submit(function (e) {
+                    //Clear cached values
+                    $.formCache.RemoveItem(cacheKey);
+
+                    //Set submit flag to true. This will prevent values from being cached on page unload.
+                    isSubmitting = true;
+
+                    return true;
                 });
 
                 //Proceed if a notification section is defined for this form.
