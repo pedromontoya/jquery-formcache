@@ -1,4 +1,7 @@
 ﻿(function ($) {
+
+    //###############################################################################
+
     /*  
     *   jQuery formCache plugin
     *   Original author: @pedromontoya
@@ -29,9 +32,11 @@
     *            </div>
     */
 
+    //###############################################################################
+
     //Keep track of cached keys.
     var cachedKeys = {};
-    //###############################################################################
+
     //Local storage helper methods.
     $.formCache = {
         RemoveItem: function (key) {
@@ -62,7 +67,9 @@
             return cachedKeys;
         }
     };
+
     //###############################################################################
+
     //Helper function to convert form values into a JSON string.
     $.formCache.FormToJsonString = function ($formElement) {
         var jsonResultObject = {},
@@ -94,7 +101,9 @@
         }
         return jsonReslutString;
     };
+
     //###############################################################################
+
     $.fn.formCache = function () {
         //Do not proceed if local storage is not supported.
         if (!window.localStorage) {
@@ -113,6 +122,7 @@
                 //Register event handler to restore cached form values.
                 $(document).ready(function () {
                     var showSuccessNotification = false;
+
                     try {
                         var jsonDataString = $.formCache.GetItem(cacheKey), //Get cached form JSON string.
                             jsonDataObject = $.parseJSON(jsonDataString);   //Convert cached JSON string to an Object.
@@ -120,50 +130,53 @@
                         //Proceed if a JSON object was correctly parsed.
                         if (jsonDataObject) {
                             var property;
+
                             //Iterate over object properties.
                             for (property in jsonDataObject) {
                                 //Check that the property belong to the Object, not to its Prototype.
                                 if (jsonDataObject.hasOwnProperty(property)) {
                                     //Check if the Object property has a value.
                                     if (jsonDataObject[property]) {
-                                        //Get handle on element with name matching the Object property.
+                                        //Get handle on element with name matching that of the Object property.
                                         var $element = $("[name='" + property + "']").first();
 
                                         //If a DOM element was found, attempt to set it's value to that of the
                                         //JSON property.
                                         if ($element && $element.length > 0) {
-                                            //Handle setting the value for different element types.
-                                            if ($element[0].type.toUpperCase() == "CHECKBOX") {
+                                            if ($element[0].type.toUpperCase() == "CHECKBOX") {     //Handle restoring value for checkbox elements
                                                 if (jsonDataObject[property] === "true") {
-                                                    $element.attr("checked", '');
-                                                    showSuccessNotification = true;
+                                                    //Set value if it is not already checked
+                                                    if (!$element[0].checked) {
+                                                        $element[0].checked = true;
+                                                        showSuccessNotification = true;
 
-                                                    //Trigger change event in case the element has any
-                                                    //event listeners attached.
-                                                    $element.change();
+                                                        //Trigger change event
+                                                        $element.change();
+                                                    }
                                                 }
-                                            } else if ($element[0].type.toUpperCase() == "RADIO") {
+                                            } else if ($element[0].type.toUpperCase() == "RADIO") {     //Handle restoring value for radio elements
                                                 if (jsonDataObject[property]) {
-                                                    //Get the radio elements with the stored value.
+                                                    //Get the radio element associated with the stored value.
                                                     var $radioElement = $("[name='" + property + "']").filter(function () {
                                                         return $(this).val() === jsonDataObject[property];
                                                     }).first();
 
                                                     if ($radioElement && $radioElement.length > 0) {
-                                                        $radioElement.attr("checked", '');
-                                                        showSuccessNotification = true;
+                                                        //Set value if it is not already checked
+                                                        if (!$radioElement[0].checked) {
+                                                            $radioElement[0].checked = true;
+                                                            showSuccessNotification = true;
 
-                                                        //Trigger change event in case the element has any
-                                                        //event listeners attached.
-                                                        $radioElement.change();
+                                                            //Trigger change event
+                                                            $radioElement.change();
+                                                        }
                                                     }
                                                 }
-                                            } else {
-                                                $element.val(jsonDataObject[property]);
+                                            } else {                                                    //Handle restoring the value for all other input elements. 
+                                                $element.val(jsonDataObject[property]);         
                                                 showSuccessNotification = true;
 
-                                                //Trigger change event in case the element has any
-                                                //event listeners attached.
+                                                //Trigger change event
                                                 $element.change();
                                             }
                                         }
@@ -241,5 +254,7 @@
             }
         });
     };
+
     //###############################################################################
+
 })(jQuery)
