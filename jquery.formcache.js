@@ -114,8 +114,8 @@
         return this.each(function () {
             var $formElement = $(this),                         //Wrap form element with jQuery Object.
                 isSubmitting = false;                           //Used by unload event to determine if form should be cached.
-                cacheKey = $formElement.data("formcache-key"),  //Grab cache key from form data- attribute.
-                $notificationSection = $formElement.find(".formcache-notification"); //Grab notification section, if defined.
+            cacheKey = $formElement.data("formcache-key"),  //Grab cache key from form data- attribute.
+            $notificationSection = $formElement.find(".formcache-notification"); //Grab notification section, if defined.
 
             //Do not proceed if a formcache-key data attribute was not specified.
             if (cacheKey) {
@@ -173,7 +173,7 @@
                                                     }
                                                 }
                                             } else {                                                    //Handle restoring the value for all other input elements. 
-                                                $element.val(jsonDataObject[property]);         
+                                                $element.val(jsonDataObject[property]);
                                                 showSuccessNotification = true;
 
                                                 //Trigger change event
@@ -252,6 +252,13 @@
             }
         });
     };
+
+    //###############################################################################
+
+    //Initialize forms flagged for caching.
+    $(function () {
+        $("[data-formcache]").formCache();
+    });
 
     //###############################################################################
 
