@@ -25,9 +25,9 @@
     *               //Style notification section
     *            }
     *       2) Add notification div within the form being cached:
-    *            <div class="formcache-notification" data-formcache-notify="true" style="display: none;">
+    *            <div class="formcache-notification" style="display: none;">
     *                <p>Your form data has been successfully restored.
-    *                   <a href="#" data-formcache-clear="true">Reset form</a>
+    *                   <button type="button" data-formcache-clear="true">Reset form</button>
     *                </p>
     *            </div>
     */
@@ -115,7 +115,7 @@
             var $formElement = $(this),                         //Wrap form element with jQuery Object.
                 isSubmitting = false;                           //Used by unload event to determine if form should be cached.
                 cacheKey = $formElement.data("formcache-key"),  //Grab cache key from form data- attribute.
-                $notificationSection = $formElement.find("[data-formcache-notify]"); //Grab notification section, if defined.
+                $notificationSection = $formElement.find(".formcache-notification"); //Grab notification section, if defined.
 
             //Do not proceed if a formcache-key data attribute was not specified.
             if (cacheKey) {
@@ -229,20 +229,18 @@
                 if ($notificationSection && $notificationSection.length > 0) {
                     //Register event handler to notify a user when values are restored.
                     $(document).ready(function () {
-                        var $resetLink = $notificationSection.first().find("a[data-formcache-clear]");
+                        var $resetElement = $notificationSection.first().find("[data-formcache-clear]");
 
-                        //Proceed if a reset link is defined for this form.
-                        if ($resetLink && $resetLink.length > 0) {
-                            $resetLink.first().click(function () {
+                        //Proceed if a reset element is defined for this form.
+                        if ($resetElement && $resetElement.length > 0) {
+                            $resetElement.first().click(function () {
                                 //Clear cached values
                                 $.formCache.RemoveItem(cacheKey);
 
                                 //Reset the form
                                 $formElement[0].reset();
-                                $formElement.find("input[type='checkbox']:checked").each(function () {
-                                    this.checked = false;
-                                });
-                                //Trigger change events on all input/select/texterea elements within the form.
+
+                                //Trigger change events on all input/select/textarea elements within the form.
                                 $("input, select, textarea", $formElement).change();
 
                                 //Hide notification
