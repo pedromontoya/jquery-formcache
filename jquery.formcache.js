@@ -35,36 +35,75 @@
     //###############################################################################
 
     //Keep track of cached keys.
-    var cachedKeys = {};
+    var cachedKeys = {},
+        keyPrefix = "FORM_CACHE_",
+        keyObjectKey = "FORM_CACHE_KEY_OBJECT";
 
     //Local storage helper methods.
     $.formCache = {
         RemoveItem: function (key) {
-            if (window.localStorage) {
-                window.localStorage.removeItem(key);
+            if (window.localStorage && key) {
+                //Assemble key
+                var cacheKey = keyPrefix + key;
+
+                //Remove item
+                window.localStorage.removeItem(cacheKey);
 
                 //Delete key
-                delete cachedKeys[key];
+                delete cachedKeys[cacheKey];
+                window.localStorage[keyObjectKey] = JSON.stringify(cachedKeys);
             }
         },
         AddItem: function (key, data) {
-            if (window.localStorage) {
-                window.localStorage[key] = data;
+            if (window.localStorage && key && data) {
+                //Assemble key
+                var cacheKey = keyPrefix + key;
 
-                //Keep track of key
-                cachedKeys[key] = key;
+                //Cache item
+                window.localStorage[cacheKey] = data;
+
+                //Store key
+                cachedKeys[cacheKey] = cacheKey;
+                window.localStorage[keyObjectKey] = JSON.stringify(cachedKeys);
             }
         },
         GetItem: function (key) {
-            if (window.localStorage) {
-                //Keep track of key
-                cachedKeys[key] = key;
+            if (window.localStorage && key) {
+                //Assemble key
+                var cacheKey = keyPrefix + key;
 
-                return window.localStorage.getItem(key);
+                //Store key
+                cachedKeys[cacheKey] = cacheKey;
+                window.localStorage[keyObjectKey] = JSON.stringify(cachedKeys);
+
+                //Get item
+                return window.localStorage.getItem(cacheKey);
             }
         },
         GetKeysObject: function () {
             return cachedKeys;
+        },
+        ClearAllCachedFormData: function () {
+            if (window.localStorage) {
+                var cachedKeyObjectString = window.localStorage[keyObjectKey];
+
+                //Proceed if a JSON key object string was found
+                if (cachedKeyObjectString) {
+                    var cachedKeyObject = JSON.parse(cachedKeyObjectString);
+
+                    var item;
+                    for (item in cachedKeyObject) {
+                        if (cachedKeyObject.hasOwnProperty(item)) {
+                            //Remove item
+                            window.localStorage.removeItem(item);
+
+                            //Delete key
+                            delete cachedKeys[item];
+                            window.localStorage[keyObjectKey] = JSON.stringify(cachedKeys);
+                        }
+                    }
+                }
+            }
         }
     };
 
