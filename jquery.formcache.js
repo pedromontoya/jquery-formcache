@@ -34,13 +34,25 @@
 
     //###############################################################################
 
-    //Keep track of cached keys.
-    var cachedKeys = {},
-        keyPrefix = "FORM_CACHE_",
-        keyObjectKey = "FORM_CACHE_KEY_OBJECT";
+    var keyPrefix = "FORM_CACHE_",
+        cachedKeysObjectKey = "FORM_CACHE_KEY_OBJECT";
 
     //Local storage helper methods.
     $.formCache = {
+        GetKeysObject: function () {
+            if (window.localStorage) {
+                var cachedKeyObjectString = window.localStorage[cachedKeysObjectKey];
+
+                //Proceed if a JSON key object string was found
+                if (cachedKeyObjectString) {
+                    var cachedKeyObject = JSON.parse(cachedKeyObjectString);
+                    if (cachedKeyObject) {
+                        return cachedKeyObject;
+                    }
+                }
+            }
+            return {};
+        },
         RemoveItem: function (key) {
             if (window.localStorage && key) {
                 //Assemble key
@@ -50,8 +62,9 @@
                 window.localStorage.removeItem(cacheKey);
 
                 //Delete key
+                var cachedKeys = this.GetKeysObject();
                 delete cachedKeys[cacheKey];
-                window.localStorage[keyObjectKey] = JSON.stringify(cachedKeys);
+                window.localStorage[cachedKeysObjectKey] = JSON.stringify(cachedKeys);
             }
         },
         AddItem: function (key, data) {
@@ -63,8 +76,9 @@
                 window.localStorage[cacheKey] = data;
 
                 //Store key
+                var cachedKeys = this.GetKeysObject();
                 cachedKeys[cacheKey] = cacheKey;
-                window.localStorage[keyObjectKey] = JSON.stringify(cachedKeys);
+                window.localStorage[cachedKeysObjectKey] = JSON.stringify(cachedKeys);
             }
         },
         GetItem: function (key) {
@@ -72,35 +86,23 @@
                 //Assemble key
                 var cacheKey = keyPrefix + key;
 
-                //Store key
-                cachedKeys[cacheKey] = cacheKey;
-                window.localStorage[keyObjectKey] = JSON.stringify(cachedKeys);
-
                 //Get item
                 return window.localStorage.getItem(cacheKey);
             }
         },
-        GetKeysObject: function () {
-            return cachedKeys;
-        },
         ClearAllCachedFormData: function () {
             if (window.localStorage) {
-                var cachedKeyObjectString = window.localStorage[keyObjectKey];
+                var cachedKeys = this.GetKeysObject();
 
-                //Proceed if a JSON key object string was found
-                if (cachedKeyObjectString) {
-                    var cachedKeyObject = JSON.parse(cachedKeyObjectString);
+                var item;
+                for (item in cachedKeys) {
+                    if (cachedKeys.hasOwnProperty(item)) {
+                        //Remove item
+                        window.localStorage.removeItem(item);
 
-                    var item;
-                    for (item in cachedKeyObject) {
-                        if (cachedKeyObject.hasOwnProperty(item)) {
-                            //Remove item
-                            window.localStorage.removeItem(item);
-
-                            //Delete key
-                            delete cachedKeys[item];
-                            window.localStorage[keyObjectKey] = JSON.stringify(cachedKeys);
-                        }
+                        //Delete key
+                        delete cachedKeys[item];
+                        window.localStorage[cachedKeysObjectKey] = JSON.stringify(cachedKeys);
                     }
                 }
             }
@@ -131,8 +133,7 @@
             if (JSON && JSON.stringify) {
                 var tmpJsonResultString = JSON.stringify(jsonResultObject);
 
-                //Only return a result if a non-empty JSON string was generated. Could check object key count, but
-                //it's not supported under IE 9.
+                //Only return a result if a non-empty JSON string was generated.
                 if (tmpJsonResultString && tmpJsonResultString !== "{}") {
                     jsonReslutString = tmpJsonResultString;
                 }
