@@ -35,7 +35,10 @@
     //###############################################################################
 
     var keyPrefix = "FORM_CACHE_",
-        cachedKeysObjectKey = "FORM_CACHE_KEY_OBJECT";
+        cachedKeysObjectKey = "FORM_CACHE_KEY_OBJECT",
+        defaultSettings = {
+            storeHiddenValues : false
+        };
 
     //Local storage helper methods.
     $.formCache = {
@@ -144,11 +147,18 @@
 
     //###############################################################################
 
-    $.fn.formCache = function () {
+    $.fn.formCache = function (settingArgs) {
         //Do not proceed if local storage is not supported.
         if (!window.localStorage) {
             return this;
         };
+        
+        //Initialize plugin settings.
+        var settings = $.extend({}, defaultSettings);
+
+        if (settingArgs) {
+            $.extend(settings, settingArgs);
+        }
 
         //Iterate over each form in the selected element collection.
         return this.each(function () {
@@ -210,6 +220,16 @@
                                                             //Trigger change event
                                                             $radioElement.change();
                                                         }
+                                                    }
+                                                }
+                                            } else if ($element[0].type.toUpperCase() == "HIDDEN") {     //Handle restoring value for hidden elements
+                                                if (jsonDataObject[property]) {
+                                                    if (settings.storeHiddenValues) {
+                                                        $element.val(jsonDataObject[property]);
+                                                        showSuccessNotification = true;
+
+                                                        //Trigger change event
+                                                        $radioElement.change();
                                                     }
                                                 }
                                             } else {                                                    //Handle restoring the value for all other input elements. 
